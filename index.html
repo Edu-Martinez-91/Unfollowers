@@ -120,6 +120,7 @@
   .section-list { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
   .section-list.hidden { display: none; }
   #backup-info.hidden { display: none; }
+  #import-compare-overlay.hidden { display: none; }
 
   /* Cards */
   .card {
@@ -477,6 +478,61 @@
 </div>
 
 <div id="toast"></div>
+
+<div id="import-compare-overlay" class="hidden" style="
+  position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+">
+  <div style="
+    background:var(--bg); border:1px solid var(--border); border-radius:16px;
+    max-width:440px; width:100%; padding:24px; max-height:90vh; overflow-y:auto;
+  ">
+    <h3 style="font-family:'Syne',sans-serif; font-size:16px; margin-bottom:10px;">
+      ⚠ Comparar antes de importar
+    </h3>
+    <p style="font-size:11px; color:var(--text3); line-height:1.7; margin-bottom:14px;">
+      El archivo que has elegido no tiene las mismas cuentas que lo que ya tienes guardado
+      (<span id="import-source-label">este navegador</span>). Antes de tocar nada, compara
+      y decide qué te quedas.
+    </p>
+    <table style="width:100%; font-size:11px; border-collapse:collapse; margin-bottom:16px;">
+      <thead>
+        <tr style="color:var(--text3); text-align:left;">
+          <th style="padding:4px 0;"></th>
+          <th style="padding:4px 0;" id="import-current-header">Actual</th>
+          <th style="padding:4px 0;">Archivo</th>
+        </tr>
+      </thead>
+      <tbody style="color:var(--text2);">
+        <tr><td style="padding:4px 0;">VIP</td><td id="import-cur-vip">0</td><td id="import-new-vip">0</td></tr>
+        <tr><td style="padding:4px 0;">Unfollowed</td><td id="import-cur-unfollowed">0</td><td id="import-new-unfollowed">0</td></tr>
+        <tr><td style="padding:4px 0;">No disponible</td><td id="import-cur-unavailable">0</td><td id="import-new-unavailable">0</td></tr>
+        <tr style="font-weight:700; border-top:1px solid var(--border);">
+          <td style="padding:6px 0 0;">Total</td>
+          <td id="import-cur-total" style="padding:6px 0 0;">0</td>
+          <td id="import-new-total" style="padding:6px 0 0;">0</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button onclick="resolveImportCompare('merge')" style="
+        background:rgba(56,217,106,0.15); border:1px solid rgba(56,217,106,0.4); border-radius:8px;
+        padding:10px 14px; color:#38d96a; font-family:'Space Mono',monospace;
+        font-size:11px; cursor:pointer; font-weight:700; text-align:left;
+      ">Combinar ambas (recomendado) — no se pierde nada de ningún lado</button>
+      <button onclick="resolveImportCompare('keepCurrent')" style="
+        background:none; border:1px solid var(--input-border); border-radius:8px;
+        padding:10px 14px; color:var(--text2); font-family:'Space Mono',monospace;
+        font-size:11px; cursor:pointer; text-align:left;
+      ">Quedarme solo con lo que ya tengo — ignora el archivo importado</button>
+      <button onclick="resolveImportCompare('keepFile')" style="
+        background:none; border:1px solid rgba(200,50,50,0.35); border-radius:8px;
+        padding:10px 14px; color:#c0392b; font-family:'Space Mono',monospace;
+        font-size:11px; cursor:pointer; text-align:left;
+      ">Quedarme solo con el archivo — borra lo que tenía y lo sustituye</button>
+    </div>
+  </div>
+</div>
 
 <script>
   // ── Estado ─────────────────────────────────────────────────
@@ -922,22 +978,89 @@
     showToast('Copia de seguridad descargada ⬇');
   }
 
+  let pendingImport = null;
+
+  function setsEqualAsArrays(currentSet, arr) {
+    arr = arr || [];
+    if (currentSet.size !== arr.length) return false;
+    for (let i = 0; i < arr.length; i++) if (!currentSet.has(arr[i])) return false;
+    return true;
+  }
+
   async function importBackup(input) {
     const file = input.files[0];
     if (!file) return;
     try {
       const backup = await readJSON(file);
-      (backup.vip || []).forEach(u => manualVerified.add(u));
-      (backup.unfollowed || []).forEach(u => manualUnfollowed.add(u));
-      (backup.unavailable || []).forEach(u => manualUnavailable.add(u));
-      saveSet('ig_vip', manualVerified);
-      saveSet('ig_unfollowed', manualUnfollowed);
-      saveSet('ig_unavailable', manualUnavailable);
-      pushCloudTags();
-      if (followingLoaded && followersLoaded) renderLists();
-      showToast('Copia de seguridad importada ⬆');
+      const newVip = backup.vip || [];
+      const newUnfollowed = backup.unfollowed || [];
+      const newUnavailable = backup.unavailable || [];
+
+      const identical = setsEqualAsArrays(manualVerified, newVip)
+        && setsEqualAsArrays(manualUnfollowed, newUnfollowed)
+        && setsEqualAsArrays(manualUnavailable, newUnavailable);
+
+      if (identical) {
+        showToast('El archivo coincide con lo que ya tienes, sin cambios');
+        input.value = '';
+        return;
+      }
+
+      pendingImport = { vip: newVip, unfollowed: newUnfollowed, unavailable: newUnavailable };
+      showImportCompare();
     } catch (e) { alert(e); }
     input.value = '';
+  }
+
+  function showImportCompare() {
+    document.getElementById('import-source-label').textContent =
+      cloudUser ? 'este navegador, ya sincronizado con tu cuenta en la nube' : 'este navegador';
+    document.getElementById('import-current-header').textContent =
+      cloudUser ? 'Actual (nube)' : 'Actual';
+
+    document.getElementById('import-cur-vip').textContent = manualVerified.size;
+    document.getElementById('import-cur-unfollowed').textContent = manualUnfollowed.size;
+    document.getElementById('import-cur-unavailable').textContent = manualUnavailable.size;
+    document.getElementById('import-cur-total').textContent =
+      manualVerified.size + manualUnfollowed.size + manualUnavailable.size;
+
+    document.getElementById('import-new-vip').textContent = pendingImport.vip.length;
+    document.getElementById('import-new-unfollowed').textContent = pendingImport.unfollowed.length;
+    document.getElementById('import-new-unavailable').textContent = pendingImport.unavailable.length;
+    document.getElementById('import-new-total').textContent =
+      pendingImport.vip.length + pendingImport.unfollowed.length + pendingImport.unavailable.length;
+
+    document.getElementById('import-compare-overlay').classList.remove('hidden');
+  }
+
+  function resolveImportCompare(choice) {
+    if (!pendingImport) return;
+    document.getElementById('import-compare-overlay').classList.add('hidden');
+
+    if (choice === 'keepCurrent') {
+      showToast('Manteniendo lo que ya tenías, archivo descartado');
+      pendingImport = null;
+      return;
+    }
+
+    if (choice === 'merge') {
+      pendingImport.vip.forEach(u => manualVerified.add(u));
+      pendingImport.unfollowed.forEach(u => manualUnfollowed.add(u));
+      pendingImport.unavailable.forEach(u => manualUnavailable.add(u));
+      showToast('Combinado: nada se ha perdido de ningún lado ✓');
+    } else if (choice === 'keepFile') {
+      manualVerified = new Set(pendingImport.vip);
+      manualUnfollowed = new Set(pendingImport.unfollowed);
+      manualUnavailable = new Set(pendingImport.unavailable);
+      showToast('Sustituido por el contenido del archivo');
+    }
+
+    saveSet('ig_vip', manualVerified);
+    saveSet('ig_unfollowed', manualUnfollowed);
+    saveSet('ig_unavailable', manualUnavailable);
+    pushCloudTags();
+    if (followingLoaded && followersLoaded) renderLists();
+    pendingImport = null;
   }
 
   // ── Toast ──────────────────────────────────────────────────

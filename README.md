@@ -22,6 +22,8 @@
 
 ## ¿Qué es esto?
 
+> Esta app nace de los niveles más oscuros donde residen la vanidad y el orgullo: *"si tú no me sigues, yo no te sigo"*. No te vamos a juzgar por estar aquí — solo te vamos a dar las herramientas.
+
 **Unfollowers** compara los dos archivos JSON que Instagram te entrega cuando exportas tu actividad (`following.json` y `followers_*.json`) y calcula, en tu propio navegador, quién sigues tú que no te sigue de vuelta. Nada de pedir tu usuario o contraseña, nada de OAuth, nada de scraping con bots que pueda bloquear tu cuenta: solo lees los archivos que Instagram ya te da oficialmente.
 
 Toda la aplicación cabe en un único `index.html`. No hay build, no hay dependencias de npm. El procesamiento es 100% client-side y el estado (cuentas marcadas como VIP, como "ya hice unfollow" o como "no disponible") se guarda en `localStorage` de tu navegador. Si quieres que ese estado viaje contigo entre dispositivos, puedes iniciar sesión opcionalmente y sincronizarlo contra una base de datos en Supabase — sin login, la app sigue funcionando 100% local, igual que siempre.
@@ -63,6 +65,7 @@ Existen decenas de apps y "servicios" de terceros que prometen decirte quién te
 - **Modo claro/oscuro automático** según las preferencias del sistema (`prefers-color-scheme`).
 - **Botones de purga** para borrar VIPs, unfollowed o no disponibles guardados, por si quieres empezar de cero.
 - **Export/import de copia de seguridad** de tus etiquetas en `.json`, para moverlas manualmente de un navegador a otro sin necesidad de cuenta.
+- **Comparación antes de importar.** Si el archivo que importas no coincide exactamente con lo que ya tienes (local o en la nube), aparece un aviso con el recuento de cada lado y tres opciones explícitas — combinar, quedarte con lo actual o quedarte con el archivo — para que ninguna importación pueda borrar datos sin que lo decidas tú mismo.
 - **Sincronización en la nube (opcional).** Inicia sesión con email/contraseña y tus etiquetas VIP/unfollowed/no-disponible se guardan en Supabase y se fusionan automáticamente con las de cualquier otro dispositivo donde abras la app — sin perder nada, sin tener que volver a categorizar.
 - **Toast de confirmación** en cada acción, sin diálogos intrusivos.
 

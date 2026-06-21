@@ -22,6 +22,8 @@
 
 ## What is this?
 
+> This app was born from the darkest corners of vanity and pride, where *"if you don't follow me, I won't follow you"* lives. No judgment for being here — we're just here to give you the tools.
+
 **Unfollowers** compares the two JSON files Instagram gives you when you export your activity (`following.json` and `followers_*.json`) and computes, entirely inside your own browser, who you follow that doesn't follow you back. No username or password required, no OAuth, no bot scraping that could get your account flagged — just the files Instagram already hands you officially.
 
 The whole app fits in a single `index.html`. No build step, no npm dependencies. Processing is 100% client-side, and your state (accounts marked as VIP, "already unfollowed", or "unavailable") is saved in your browser's `localStorage`. If you want that state to follow you across devices, you can optionally log in and sync it against a Supabase database — without logging in, the app keeps working 100% locally, exactly as before.
@@ -63,6 +65,7 @@ There are dozens of third-party apps and "services" that promise to tell you who
 - **Automatic light/dark mode** based on system preference (`prefers-color-scheme`).
 - **Purge buttons** to clear saved VIPs, unfollowed, or unavailable tags if you want a clean slate.
 - **Backup export/import** of your tags as `.json`, to move them manually between browsers without needing an account.
+- **Comparison before importing.** If the file you import doesn't exactly match what you already have (locally or in the cloud), a warning shows the count on each side and three explicit choices — merge, keep what you have, or keep the file — so no import can ever wipe data without you deciding it.
 - **Cloud sync (optional).** Log in with email/password and your VIP/unfollowed/unavailable tags are saved to Supabase and automatically merged with any other device where you open the app — nothing lost, no re-tagging from scratch.
 - **Confirmation toast** on every action, no intrusive dialogs.
 
