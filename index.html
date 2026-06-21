@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IG Unfollowers</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a; --bg2: rgba(255,255,255,0.04); --bg3: rgba(255,255,255,0.03);
+    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.07);
+    --text: #ffffff; --text2: #aaaaaa; --text3: #666666; --text4: #444444;
+    --input-bg: rgba(255,255,255,0.05); --input-border: rgba(255,255,255,0.1);
+    --btn-bg: rgba(255,255,255,0.07); --btn-color: #666;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f2f2f7; --bg2: rgba(0,0,0,0.05); --bg3: rgba(0,0,0,0.03);
+      --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.09);
+      --text: #111111; --text2: #333333; --text3: #666666; --text4: #999999;
+      --input-bg: rgba(0,0,0,0.06); --input-border: rgba(0,0,0,0.18);
+      --btn-bg: rgba(0,0,0,0.07); --btn-color: #444;
+    }
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: 'Space Mono', monospace; min-height: 100vh; padding: 32px 16px 60px; }
+
+  h1 {
+    font-family: 'Syne', sans-serif; font-size: clamp(26px, 7vw, 44px);
+    font-weight: 800; letter-spacing: -1px; text-align: center;
+    background: linear-gradient(135deg, #f09433, #dc2743, #bc1888);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .wrap { max-width: 680px; margin: 0 auto; }
+
+  .logo-box { display: flex; justify-content: center; margin-bottom: 16px; }
+  .logo-inner {
+    background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    border-radius: 18px; padding: 10px 13px; display: inline-flex;
+  }
+
+  .subtitle { text-align: center; color: #555; font-size: 12px; margin-top: 8px; margin-bottom: 36px; }
+
+  .instrucciones {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 20px; margin-bottom: 28px;
+  }
+  .instrucciones h3 { font-family: 'Syne', sans-serif; font-size: 14px; margin-bottom: 10px; }
+  .instrucciones ol { padding-left: 18px; color: var(--text3); font-size: 11px; line-height: 2.1; }
+  .instrucciones strong { color: var(--text2); }
+  .instrucciones .red { color: #e1306c; }
+
+  .drops { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+  .drop {
+    flex: 1; min-width: 140px; border: 2px dashed #444; border-radius: 14px;
+    padding: 24px 14px; text-align: center; cursor: pointer;
+    background: var(--bg2); transition: all 0.2s; position: relative;
+  }
+  .drop:hover { border-color: #e1306c; background: rgba(225,48,108,0.05); }
+  .drop.loaded { border-color: #38d96a; background: rgba(56,217,106,0.06); }
+  .drop.drag { border-color: #e1306c; background: rgba(225,48,108,0.08); }
+  .drop input { display: none; }
+  .drop .icon { font-size: 28px; margin-bottom: 8px; }
+  .drop .label { font-size: 11px; color: #888; }
+  .drop.loaded .label { color: #38d96a; }
+  .drop .hint { font-size: 10px; color: #444; margin-top: 4px; }
+
+  .aviso-multi {
+    background: rgba(240,148,51,0.08); border: 1px solid rgba(240,148,51,0.3);
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 20px;
+    font-size: 11px; color: #f09433; display: none;
+  }
+
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+  .stat {
+    flex: 1; min-width: 100px; background: var(--bg2);
+    border-radius: 12px; padding: 14px 12px; text-align: center;
+  }
+  .stat .num { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; }
+  .stat .lbl { font-size: 10px; color: var(--text3); margin-top: 3px; }
+  .stat.red { border: 1px solid rgba(225,48,108,0.3); }
+  .stat.red .num { color: #e1306c; }
+  .stat.blue { border: 1px solid rgba(29,155,240,0.3); }
+  .stat.blue .num { color: #1d9bf0; }
+  .stat.grey { border: 1px solid rgba(255,255,255,0.08); }
+  .stat.grey .num { color: var(--text3); }
+
+  .search-box {
+    width: 100%; background: var(--input-bg);
+    border: 1px solid var(--input-border); border-radius: 10px;
+    padding: 11px 16px; color: var(--text); font-family: 'Space Mono', monospace;
+    font-size: 13px; outline: none; margin-bottom: 22px;
+  }
+  .search-box::placeholder { color: var(--text4); }
+
+  .section { margin-bottom: 20px; }
+  .section-header {
+    width: 100%; display: flex; align-items: center; gap: 12px;
+    border-radius: 12px; padding: 14px 16px; cursor: pointer;
+    border: none; transition: opacity 0.15s; text-align: left;
+  }
+  .section-header.red { background: rgba(225,48,108,0.1); border: 1px solid rgba(225,48,108,0.25); }
+  .section-header.blue { background: rgba(29,155,240,0.08); border: 1px solid rgba(29,155,240,0.2); }
+  .section-header:hover { opacity: 0.85; }
+  .section-emoji { font-size: 20px; }
+  .section-info { flex: 1; }
+  .section-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
+  .section-title.red { color: #e1306c; }
+  .section-title.blue { color: #1d9bf0; }
+  .section-sub { font-size: 10px; color: var(--text3); margin-top: 3px; }
+  .section-badge { border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700; }
+  .section-badge.red { background: rgba(225,48,108,0.2); color: #e1306c; }
+  .section-badge.blue { background: rgba(29,155,240,0.15); color: #1d9bf0; }
+  .chevron { color: var(--text3); font-size: 18px; transition: transform 0.2s; }
+  .chevron.open { transform: rotate(90deg); }
+
+  .section-list { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
+  .section-list.hidden { display: none; }
+
+  /* Cards */
+  .card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 11px;
+    background: var(--bg2); border: 1px solid var(--border2);
+    transition: background 0.15s;
+  }
+  .card-link {
+    display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;
+    text-decoration: none;
+  }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: #fff;
+    font-family: 'Syne', sans-serif;
+  }
+  .card-info { flex: 1; min-width: 0; }
+  .card-user {
+    font-size: 13px; font-weight: 700; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-date { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  /* Botón verificar */
+  .btn-verify {
+    flex-shrink: 0; border: none; border-radius: 8px; cursor: pointer;
+    padding: 6px 10px; font-size: 11px; font-family: 'Space Mono', monospace;
+    font-weight: 700; transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-verify.unverified {
+    background: var(--btn-bg); color: var(--btn-color);
+  }
+  .btn-verify.unverified:hover {
+    background: rgba(29,155,240,0.2); color: #1d9bf0;
+  }
+  .btn-verify.verified {
+    background: rgba(29,155,240,0.2); color: #1d9bf0;
+    border: 1px solid rgba(29,155,240,0.4);
+  }
+
+  .empty { text-align: center; padding: 36px 20px; color: var(--text4); font-size: 12px; }
+
+  #resultados { display: none; }
+
+
+  /* Unfollowed */
+  .btn-unfollow {
+    flex-shrink:0; border:none; border-radius:8px; cursor:pointer;
+    padding:6px 10px; font-size:11px; font-family:'Space Mono',monospace;
+    font-weight:700; transition:all 0.18s; white-space:nowrap;
+  }
+  .btn-unfollow.pending {
+    background: var(--btn-bg); color: var(--btn-color);
+  }
+  .btn-unfollow.pending:hover {
+    background: rgba(225,48,108,0.2); color: #e1306c;
+  }
+  .btn-unfollow.done {
+    background: rgba(225,48,108,0.15); color: #e1306c;
+    border: 1px solid rgba(225,48,108,0.35);
+    text-decoration: none;
+  }
+  .card.unfollowed .card-user {
+    text-decoration: line-through;
+    opacity: 0.45;
+  }
+  .card.unfollowed .card-date {
+    opacity: 0.35;
+  }
+  .card.unfollowed {
+    opacity: 0.7;
+  }
+  .btn-unavailable {
+    flex-shrink:0; border:none; border-radius:8px; cursor:pointer;
+    padding:6px 10px; font-size:11px; font-family:'Space Mono',monospace;
+    font-weight:700; transition:all 0.18s; white-space:nowrap;
+  }
+  .btn-unavailable.pending {
+    background: var(--btn-bg); color: var(--btn-color);
+  }
+  .btn-unavailable.pending:hover {
+    background: rgba(150,150,150,0.2); color: #888;
+  }
+  .btn-unavailable.done {
+    background: rgba(225,48,108,0.15); color: #e1306c;
+    border: 1px solid rgba(225,48,108,0.35);
+  }
+  .card.unavailable .card-user {
+    opacity: 0.4;
+  }
+  .card.unavailable .card-date {
+    opacity: 0.3;
+  }
+  .card.unavailable {
+    opacity: 0.6;
+    border-style: dashed;
+  }
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 18px; font-size: 12px; color: var(--text2);
+    opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap;
+    z-index: 999;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade { animation: fadeUp 0.3s ease both; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #111; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="logo-box">
+    <div class="logo-inner">
+      <svg viewBox="0 0 24 24" fill="white" width="30" height="30">
+        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+      </svg>
+    </div>
+  </div>
+  <h1>IG Unfollowers</h1>
+  <p class="subtitle">Descubre quién no te devuelve el follow</p>
+
+  <div class="instrucciones" id="instrucciones">
+    <h3>📦 Cómo obtener tus datos</h3>
+    <ol>
+      <li>Instagram → <strong>Ajustes → Tu actividad → Descargar tu información</strong></li>
+      <li>Formato <strong>JSON</strong> → solicitar descarga</li>
+      <li>Te llega un email con un ZIP → descomprímelo</li>
+      <li>Entra en <strong>connections/followers_and_following/</strong></li>
+      <li>Sube aquí <span class="red">following.json</span> y todos los <span class="red">followers_X.json</span> que haya</li>
+    </ol>
+  </div>
+
+  <div class="drops">
+    <div class="drop" id="drop-following" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDrop(event,'following')">
+      <input type="file" id="input-following" accept=".json" onchange="loadFollowing(this)">
+      <div class="icon">📤</div>
+      <div class="label" id="label-following">following.json</div>
+      <div class="hint">Arrastra o toca</div>
+    </div>
+    <div class="drop" id="drop-followers" ondragover="onDrag(event,this)" ondragleave="offDrag(this)" ondrop="onDrop(event,'followers')">
+      <input type="file" id="input-followers" accept=".json" multiple onchange="loadFollowers(this)">
+      <div class="icon">📥</div>
+      <div class="label" id="label-followers">followers_1.json (y más)</div>
+      <div class="hint">Puedes seleccionar varios</div>
+    </div>
+  </div>
+
+  <div class="aviso-multi" id="aviso-multi">
+    ⚠️ Instagram parte los seguidores en varios archivos (followers_1.json, followers_2.json…). Selecciónalos todos a la vez.
+  </div>
+
+  <div id="resultados">
+    <div class="stats">
+      <div class="stat grey"><div class="num" id="n-following">0</div><div class="lbl">Siguiendo</div></div>
+      <div class="stat grey"><div class="num" id="n-followers">0</div><div class="lbl">Seguidores</div></div>
+      <div class="stat red"><div class="num" id="n-unfollow">0</div><div class="lbl">A hacer unfollow</div></div>
+      <div class="stat blue"><div class="num" id="n-verified">0</div><div class="lbl">Verificados</div></div>
+      <div class="stat" style="border:1px solid rgba(225,48,108,0.2)"><div class="num" id="n-unfollowed" style="color:#c0392b">0</div><div class="lbl">Unfollowed ✓</div></div>
+      <div class="stat" style="border:1px solid rgba(150,150,150,0.25)"><div class="num" id="n-unavailable" style="color:#888">0</div><div class="lbl">No disponible</div></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:22px;">
+      <input class="search-box" style="margin-bottom:0;flex:1;" type="text" placeholder="🔍 Buscar usuario..." oninput="renderLists()" id="search">
+      <button id="btn-sort" onclick="toggleSort()" style="
+        flex-shrink:0; background:var(--btn-bg); border:1px solid var(--input-border);
+        border-radius:10px; padding:0 14px; color:var(--btn-color); font-family:'Space Mono',monospace;
+        font-size:12px; cursor:pointer; white-space:nowrap; transition:all 0.2s;">
+        🕐 Recientes primero
+      </button>
+    </div>
+
+    <!-- Normales -->
+    <div class="section">
+      <button class="section-header red" onclick="toggleSection('normal')">
+        <span class="section-emoji">🎯</span>
+        <div class="section-info">
+          <div class="section-title red">A hacer unfollow <span class="section-badge red" id="badge-normal">0</span></div>
+          <div class="section-sub">Cuentas normales que no te siguen de vuelta</div>
+        </div>
+        <span class="chevron open" id="chev-normal">›</span>
+      </button>
+      <div class="section-list" id="list-normal"></div>
+    </div>
+
+    <!-- Verificados -->
+    <div class="section">
+      <button class="section-header blue" onclick="toggleSection('verified')">
+        <span class="section-emoji">✨</span>
+        <div class="section-info">
+          <div class="section-title blue">Verificados / Famosos <span class="section-badge blue" id="badge-verified">0</span></div>
+          <div class="section-sub">Marcados manualmente por ti</div>
+        </div>
+        <span class="chevron" id="chev-verified">›</span>
+      </button>
+      <div class="section-list hidden" id="list-verified"></div>
+    </div>
+
+    <!-- Unfollowed -->
+    <div class="section">
+      <button class="section-header" style="background:rgba(225,48,108,0.07);border:1px solid rgba(225,48,108,0.2);" onclick="toggleSection('unfollowed')">
+        <span class="section-emoji">✂︎</span>
+        <div class="section-info">
+          <div class="section-title" style="color:#c0392b;">Unfollowed <span class="section-badge" style="background:rgba(192,57,43,0.15);color:#c0392b;" id="badge-unfollowed">0</span></div>
+          <div class="section-sub">Ya les has dado unfollow</div>
+        </div>
+        <span class="chevron" id="chev-unfollowed">›</span>
+      </button>
+      <div class="section-list hidden" id="list-unfollowed"></div>
+    </div>
+
+    <!-- No disponibles -->
+    <div class="section">
+      <button class="section-header" style="background:rgba(150,150,150,0.06);border:1px solid rgba(150,150,150,0.2);" onclick="toggleSection('unavailable')">
+        <span class="section-emoji">👻</span>
+        <div class="section-info">
+          <div class="section-title" style="color:#888;">No disponibles <span class="section-badge" style="background:rgba(150,150,150,0.15);color:#888;" id="badge-unavailable">0</span></div>
+          <div class="section-sub">Bloqueado, eliminada o suspendida</div>
+        </div>
+        <span class="chevron" id="chev-unavailable">›</span>
+      </button>
+      <div class="section-list hidden" id="list-unavailable"></div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:40px;margin-bottom:8px;font-size:10px;color:var(--text4);">
+    VIPs y unfollowed se guardan en tu navegador automáticamente.
+  </div>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;">
+    <button onclick="resetVips()" style="
+      background:none; border:1px solid rgba(29,155,240,0.35); border-radius:8px;
+      padding:7px 14px; color:#1d9bf0; font-family:'Space Mono',monospace;
+      font-size:10px; cursor:pointer; opacity:0.7;
+    ">🗑 Borrar VIPs guardados</button>
+    <button onclick="resetUnfollowed()" style="
+      background:none; border:1px solid rgba(200,50,50,0.35); border-radius:8px;
+      padding:7px 14px; color:#c0392b; font-family:'Space Mono',monospace;
+      font-size:10px; cursor:pointer; opacity:0.7;
+    ">🗑 Borrar unfollowed guardados</button>
+    <button onclick="resetUnavailable()" style="
+      background:none; border:1px solid rgba(150,150,150,0.3); border-radius:8px;
+      padding:7px 14px; color:#888; font-family:'Space Mono',monospace;
+      font-size:10px; cursor:pointer; opacity:0.7;
+    ">🗑 Borrar no disponibles guardados</button>
+  </div>
+  <div style="text-align:center;margin-top:50px;font-size:10px;color:var(--text4);">
+    Todo se procesa en tu navegador. Ningún dato sale de tu dispositivo.
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ── Estado ─────────────────────────────────────────────────
+  let following = [];
+  let followers = [];
+  let followingLoaded = false;
+  let followersLoaded = false;
+  // Sets persistidos en localStorage
+  function loadSet(key) {
+    try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); }
+    catch { return new Set(); }
+  }
+  function saveSet(key, set) {
+    try { localStorage.setItem(key, JSON.stringify([...set])); } catch {}
+  }
+
+  let manualVerified   = loadSet('ig_vip');
+  let manualUnfollowed = loadSet('ig_unfollowed');
+  let manualUnavailable = loadSet('ig_unavailable');
+
+  // ── Extractor ──────────────────────────────────────────────
+  function extractUsers(json) {
+    const parse = (arr) => arr.map(entry => {
+      const data = entry?.string_list_data?.[0] ?? {};
+      const username = (entry.title && entry.title.trim() !== '')
+        ? entry.title.trim()
+        : (data.value || '?');
+      return {
+        username,
+        href: data.href || ('https://www.instagram.com/' + username),
+        timestamp: data.timestamp || 0,
+      };
+    });
+    if (json?.relationships_following) return parse(json.relationships_following);
+    if (json?.relationships_followers) return parse(json.relationships_followers);
+    if (Array.isArray(json)) return parse(json);
+    return [];
+  }
+
+  function readJSON(file) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = e => { try { res(JSON.parse(e.target.result)); } catch { rej('JSON inválido: ' + file.name); } };
+      r.onerror = () => rej('Error leyendo ' + file.name);
+      r.readAsText(file);
+    });
+  }
+
+  // ── Carga archivos ─────────────────────────────────────────
+  async function loadFollowing(input) {
+    const file = input.files[0];
+    if (!file) return;
+    try {
+      following = extractUsers(await readJSON(file));
+      followingLoaded = true;
+      markLoaded('drop-following', 'label-following', file.name);
+      maybeRender();
+    } catch(e) { alert(e); }
+  }
+
+  async function loadFollowers(input) {
+    const files = Array.from(input.files);
+    if (!files.length) return;
+    document.getElementById('aviso-multi').style.display = 'block';
+    try {
+      const jsons = await Promise.all(files.map(readJSON));
+      let all = [];
+      jsons.forEach(json => all = all.concat(extractUsers(json)));
+      const seen = new Set();
+      followers = all.filter(u => { if (seen.has(u.username)) return false; seen.add(u.username); return true; });
+      followersLoaded = true;
+      const label = files.length === 1 ? files[0].name : `${files.length} archivos cargados`;
+      markLoaded('drop-followers', 'label-followers', label);
+      maybeRender();
+    } catch(e) { alert(e); }
+  }
+
+  function markLoaded(dropId, labelId, name) {
+    document.getElementById(dropId).classList.add('loaded');
+    document.getElementById(labelId).textContent = name;
+  }
+
+  // ── Drag & Drop ────────────────────────────────────────────
+  function onDrag(e, el) { e.preventDefault(); el.classList.add('drag'); }
+  function offDrag(el) { el.classList.remove('drag'); }
+  function onDrop(e, tipo) {
+    e.preventDefault();
+    offDrag(document.getElementById('drop-' + tipo));
+    const files = Array.from(e.dataTransfer.files);
+    if (!files.length) return;
+    if (tipo === 'following') {
+      readJSON(files[0]).then(json => {
+        following = extractUsers(json);
+        followingLoaded = true;
+        markLoaded('drop-following', 'label-following', files[0].name);
+        maybeRender();
+      }).catch(alert);
+    } else {
+      document.getElementById('aviso-multi').style.display = 'block';
+      Promise.all(files.map(readJSON)).then(jsons => {
+        let all = [];
+        jsons.forEach(json => all = all.concat(extractUsers(json)));
+        const seen = new Set();
+        followers = all.filter(u => { if (seen.has(u.username)) return false; seen.add(u.username); return true; });
+        followersLoaded = true;
+        const label = files.length === 1 ? files[0].name : `${files.length} archivos cargados`;
+        markLoaded('drop-followers', 'label-followers', label);
+        maybeRender();
+      }).catch(alert);
+    }
+  }
+
+  document.getElementById('drop-following').addEventListener('click', () => document.getElementById('input-following').click());
+  document.getElementById('drop-followers').addEventListener('click', () => document.getElementById('input-followers').click());
+
+  // ── Lógica principal ───────────────────────────────────────
+  let allUnfollowers = [];
+
+  function maybeRender() {
+    if (!followingLoaded || !followersLoaded) return;
+    document.getElementById('instrucciones').style.display = 'none';
+    document.getElementById('resultados').style.display = 'block';
+
+    const followerSet = new Set(followers.map(u => u.username.toLowerCase()));
+    allUnfollowers = following.filter(u => !followerSet.has(u.username.toLowerCase()));
+
+    // Limpiar del localStorage cualquier marca (VIP o unfollowed)
+    // que ya no aparezca como unfollower en los JSONs actuales
+    const unfollowerSet = new Set(allUnfollowers.map(u => u.username));
+    manualVerified.forEach(u => { if (!unfollowerSet.has(u)) manualVerified.delete(u); });
+    manualUnfollowed.forEach(u => { if (!unfollowerSet.has(u)) manualUnfollowed.delete(u); });
+    manualUnavailable.forEach(u => { if (!unfollowerSet.has(u)) manualUnavailable.delete(u); });
+    saveSet('ig_vip', manualVerified);
+    saveSet('ig_unfollowed', manualUnfollowed);
+    saveSet('ig_unavailable', manualUnavailable);
+
+
+
+    updateStats();
+    renderLists();
+  }
+
+  function updateStats() {
+    const normalCount    = allUnfollowers.filter(u => !manualVerified.has(u.username)).length;
+    const verifiedCount  = manualVerified.size;
+    document.getElementById('n-following').textContent = following.length;
+    document.getElementById('n-followers').textContent = followers.length;
+    document.getElementById('n-unfollow').textContent  = normalCount;
+    document.getElementById('n-verified').textContent  = verifiedCount;
+    document.getElementById('n-unfollowed').textContent   = manualUnfollowed.size;
+    document.getElementById('n-unavailable').textContent  = manualUnavailable.size;
+  }
+
+  function renderLists() {
+    const q = (document.getElementById('search').value || '').toLowerCase().trim();
+    const filter = list => q ? list.filter(u => u.username.toLowerCase().includes(q)) : list;
+
+    // Orden de prioridad: VIP > unfollowed > unavailable > normal
+    const normal      = filter(sortUsers(allUnfollowers.filter(u =>
+      !manualVerified.has(u.username) && !manualUnfollowed.has(u.username) && !manualUnavailable.has(u.username)
+    )));
+    const verified    = filter(sortUsers(allUnfollowers.filter(u => manualVerified.has(u.username))));
+    const unfollowed  = filter(sortUsers(allUnfollowers.filter(u => manualUnfollowed.has(u.username))));
+    const unavailable = filter(sortUsers(allUnfollowers.filter(u => manualUnavailable.has(u.username))));
+
+    renderSection('list-normal',      'badge-normal',      normal,      'normal');
+    renderSection('list-verified',    'badge-verified',    verified,    'verified');
+    renderSection('list-unfollowed',  'badge-unfollowed',  unfollowed,  'unfollowed');
+    renderSection('list-unavailable', 'badge-unavailable', unavailable, 'unavailable');
+    updateStats();
+  }
+
+  function renderSection(listId, badgeId, users, sectionType) {
+    const container = document.getElementById(listId);
+    document.getElementById(badgeId).textContent = users.length;
+
+    const emptyMsgs = {
+      verified: 'Aún no has marcado ninguna cuenta como VIP',
+      unfollowed: 'Aún no has marcado ninguna como unfollowed',
+      unavailable: 'Aún no has marcado ninguna como no disponible',
+      normal: 'Sin resultados'
+    };
+    if (users.length === 0) {
+      container.innerHTML = `<div class="empty">${emptyMsgs[sectionType] || 'Sin resultados'}</div>`;
+      return;
+    }
+
+    container.innerHTML = users.map((u, i) => {
+      const fecha = u.timestamp ? new Date(u.timestamp * 1000).toLocaleDateString('es-ES') : '';
+      const isV   = manualVerified.has(u.username);
+      const isU   = manualUnfollowed.has(u.username);
+      const isN   = manualUnavailable.has(u.username);
+      return `
+        <div class="card ${isU ? 'unfollowed' : isN ? 'unavailable' : ''} fade" style="animation-delay:${Math.min(i*15,400)}ms">
+          <a class="card-link" href="${u.href}" target="_blank" rel="noreferrer">
+            <div class="avatar">${u.username[0].toUpperCase()}</div>
+            <div class="card-info">
+              <div class="card-user">@${u.username}</div>
+              ${fecha ? `<div class="card-date">Seguido desde ${fecha}</div>` : ''}
+            </div>
+          </a>
+          <button class="btn-verify ${isV ? 'verified' : 'unverified'}"
+                  onclick="toggleVerify('${u.username}')"
+                  title="${isV ? 'Quitar verificado' : 'Marcar como verificado/famoso'}">
+            ${isV ? '✓ VIP' : '＋ VIP'}
+          </button>
+          <button class="btn-unfollow ${isU ? 'done' : 'pending'}"
+                  onclick="toggleUnfollow('${u.username}')"
+                  title="${isU ? 'Desmarcar unfollow' : 'Marcar como unfollowed'}">
+            ${isU ? '✓ hecho' : '✂︎'}
+          </button>
+          <button class="btn-unavailable ${isN ? 'done' : 'pending'}"
+                  onclick="toggleUnavailable('${u.username}')"
+                  title="${isN ? 'Desmarcar no disponible' : 'Marcar como no disponible'}">
+            ${isN ? '✓ 👻' : '👻'}
+          </button>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Orden ──────────────────────────────────────────────────
+  let sortAsc = false; // false = recientes primero (default)
+
+  function toggleSort() {
+    sortAsc = !sortAsc;
+    const btn = document.getElementById('btn-sort');
+    btn.textContent = sortAsc ? '🕐 Antiguos primero' : '🕐 Recientes primero';
+    renderLists();
+  }
+
+  function sortUsers(list) {
+    return [...list].sort((a, b) => sortAsc
+      ? a.timestamp - b.timestamp
+      : b.timestamp - a.timestamp
+    );
+  }
+
+  // ── Toggle unfollowed manual (se resetea al recargar JSONs) ──
+  function toggleUnavailable(username) {
+    if (manualUnavailable.has(username)) {
+      manualUnavailable.delete(username);
+      showToast(`@${username} desmarcado`);
+    } else {
+      manualUnavailable.add(username);
+      showToast(`@${username} marcado como no disponible 👻`);
+    }
+    saveSet('ig_unavailable', manualUnavailable);
+    renderLists();
+  }
+
+  function toggleUnfollow(username) {
+    if (manualUnfollowed.has(username)) {
+      manualUnfollowed.delete(username);
+      showToast(`@${username} desmarcado`);
+    } else {
+      manualUnfollowed.add(username);
+      showToast(`@${username} marcado como unfollowed ✂︎`);
+    }
+    saveSet('ig_unfollowed', manualUnfollowed);
+    renderLists();
+  }
+
+  // ── Toggle verificado manual ───────────────────────────────
+  function toggleVerify(username) {
+    if (manualVerified.has(username)) {
+      manualVerified.delete(username);
+      showToast(`@${username} quitado de verificados`);
+    } else {
+      manualVerified.add(username);
+      showToast(`@${username} marcado como VIP ✓`);
+    }
+    saveSet('ig_vip', manualVerified);
+    renderLists();
+  }
+
+  // ── Acordeón ───────────────────────────────────────────────
+  function toggleSection(id) {
+    document.getElementById('list-' + id).classList.toggle('hidden');
+    document.getElementById('chev-' + id).classList.toggle('open');
+  }
+
+  // ── Reset storage ─────────────────────────────────────────────
+  function resetVips() {
+    if (!confirm('¿Borrar todos los VIPs guardados?')) return;
+    localStorage.removeItem('ig_vip');
+    manualVerified = new Set();
+    renderLists();
+    showToast('VIPs borrados');
+  }
+  function resetUnavailable() {
+    if (!confirm('¿Borrar todos los no disponibles guardados?')) return;
+    localStorage.removeItem('ig_unavailable');
+    manualUnavailable = new Set();
+    renderLists();
+    showToast('No disponibles borrados 👻');
+  }
+
+  function resetUnfollowed() {
+    if (!confirm('¿Borrar todos los unfollowed guardados?')) return;
+    localStorage.removeItem('ig_unfollowed');
+    manualUnfollowed = new Set();
+    renderLists();
+    showToast('Unfollowed borrados ✓');
+  }
+
+  // ── Toast ──────────────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+  }
+</script>
+</body>
+</html>
