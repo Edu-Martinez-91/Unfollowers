@@ -122,6 +122,8 @@
   #backup-info.hidden { display: none; }
   #import-compare-overlay { display: flex; }
   #import-compare-overlay.hidden { display: none; }
+  #danger-confirm-overlay { display: flex; }
+  #danger-confirm-overlay.hidden { display: none; }
 
   /* Cards */
   .card {
@@ -534,11 +536,42 @@
         padding:10px 14px; color:var(--text2); font-family:'Space Mono',monospace;
         font-size:11px; cursor:pointer; text-align:left;
       ">Quedarme solo con lo que ya tengo — ignora el archivo importado</button>
-      <button onclick="resolveImportCompare('keepFile')" style="
+      <button onclick="confirmDestructiveImport()" style="
         background:none; border:1px solid rgba(200,50,50,0.35); border-radius:8px;
         padding:10px 14px; color:#c0392b; font-family:'Space Mono',monospace;
         font-size:11px; cursor:pointer; text-align:left;
       ">Quedarme solo con el archivo — borra lo que tenía y lo sustituye</button>
+    </div>
+  </div>
+</div>
+
+<div id="danger-confirm-overlay" class="hidden" style="
+  position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1100;
+  align-items:center; justify-content:center; padding:20px;
+">
+  <div style="
+    background:var(--bg); border:1px solid rgba(200,50,50,0.4); border-radius:16px;
+    max-width:380px; width:100%; padding:24px;
+  ">
+    <h3 style="font-family:'Syne',sans-serif; font-size:15px; margin-bottom:10px; color:#c0392b;">
+      ⚠ Última comprobación
+    </h3>
+    <p id="danger-confirm-msg" style="font-size:11px; color:var(--text3); line-height:1.6; margin-bottom:14px;"></p>
+    <p style="font-size:11px; color:var(--text2); margin-bottom:8px;">
+      Escribe <strong id="danger-confirm-word" style="color:#c0392b; letter-spacing:1px;"></strong> para confirmar:
+    </p>
+    <input id="danger-confirm-input" class="search-box" style="margin-bottom:14px;" type="text" autocomplete="off" oninput="checkDangerConfirmInput()">
+    <div style="display:flex; gap:8px;">
+      <button id="danger-confirm-btn" onclick="executeDangerConfirm()" disabled style="
+        flex:1; background:rgba(200,50,50,0.15); border:1px solid rgba(200,50,50,0.4); border-radius:8px;
+        padding:9px 14px; color:#c0392b; font-family:'Space Mono',monospace;
+        font-size:11px; cursor:not-allowed; font-weight:700; opacity:0.5;
+      ">Confirmar borrado</button>
+      <button onclick="cancelDangerConfirm()" style="
+        flex:1; background:none; border:1px solid var(--input-border); border-radius:8px;
+        padding:9px 14px; color:var(--text2); font-family:'Space Mono',monospace;
+        font-size:11px; cursor:pointer;
+      ">Cancelar</button>
     </div>
   </div>
 </div>
@@ -944,28 +977,74 @@
     document.getElementById('chev-' + id).classList.toggle('open');
   }
 
+  // ── Doble confirmación para acciones destructivas ───────────
+  // Paso 1: confirm() normal. Paso 2: escribir una palabra aleatoria
+  // que se muestra en pantalla. Solo entonces se ejecuta el callback.
+  const DANGER_WORDS = ['MANGO','TIGRE','LLUVIA','COHETE','PIANO','GLOBO','SENDERO','BRISA','CACTUS','TORTUGA','VOLCAN','ESTRELLA','PULPO','CARAMELO','LINTERNA'];
+  let dangerConfirmWord = '';
+  let dangerConfirmCallback = null;
+
+  function dangerConfirm(message, callback) {
+    if (!confirm(message + '\n\n¿Estás seguro?')) return;
+    dangerConfirmWord = DANGER_WORDS[Math.floor(Math.random() * DANGER_WORDS.length)];
+    dangerConfirmCallback = callback;
+    document.getElementById('danger-confirm-msg').textContent = message;
+    document.getElementById('danger-confirm-word').textContent = dangerConfirmWord;
+    document.getElementById('danger-confirm-input').value = '';
+    checkDangerConfirmInput();
+    document.getElementById('danger-confirm-overlay').classList.remove('hidden');
+    document.getElementById('danger-confirm-input').focus();
+  }
+
+  function checkDangerConfirmInput() {
+    const ok = document.getElementById('danger-confirm-input').value.trim().toUpperCase() === dangerConfirmWord;
+    const btn = document.getElementById('danger-confirm-btn');
+    btn.disabled = !ok;
+    btn.style.opacity = ok ? '1' : '0.5';
+    btn.style.cursor = ok ? 'pointer' : 'not-allowed';
+  }
+
+  function executeDangerConfirm() {
+    if (document.getElementById('danger-confirm-input').value.trim().toUpperCase() !== dangerConfirmWord) return;
+    const cb = dangerConfirmCallback;
+    cancelDangerConfirm();
+    if (cb) cb();
+  }
+
+  function cancelDangerConfirm() {
+    document.getElementById('danger-confirm-overlay').classList.add('hidden');
+    dangerConfirmCallback = null;
+    dangerConfirmWord = '';
+  }
+
   // ── Reset storage ─────────────────────────────────────────────
   function resetVips() {
-    if (!confirm('¿Borrar todos los VIPs guardados?')) return;
-    localStorage.removeItem('ig_vip');
-    manualVerified = new Set();
-    renderLists();
-    showToast('VIPs borrados');
+    dangerConfirm('Vas a borrar todos los VIPs guardados.', () => {
+      localStorage.removeItem('ig_vip');
+      manualVerified = new Set();
+      pushCloudTags();
+      renderLists();
+      showToast('VIPs borrados');
+    });
   }
   function resetUnavailable() {
-    if (!confirm('¿Borrar todos los no disponibles guardados?')) return;
-    localStorage.removeItem('ig_unavailable');
-    manualUnavailable = new Set();
-    renderLists();
-    showToast('No disponibles borrados 👻');
+    dangerConfirm('Vas a borrar todos los no disponibles guardados.', () => {
+      localStorage.removeItem('ig_unavailable');
+      manualUnavailable = new Set();
+      pushCloudTags();
+      renderLists();
+      showToast('No disponibles borrados 👻');
+    });
   }
 
   function resetUnfollowed() {
-    if (!confirm('¿Borrar todos los unfollowed guardados?')) return;
-    localStorage.removeItem('ig_unfollowed');
-    manualUnfollowed = new Set();
-    renderLists();
-    showToast('Unfollowed borrados ✓');
+    dangerConfirm('Vas a borrar todos los unfollowed guardados.', () => {
+      localStorage.removeItem('ig_unfollowed');
+      manualUnfollowed = new Set();
+      pushCloudTags();
+      renderLists();
+      showToast('Unfollowed borrados ✓');
+    });
   }
 
   // ── Backup: exportar / importar etiquetas ───────────────────
@@ -1040,6 +1119,13 @@
       pendingImport.vip.length + pendingImport.unfollowed.length + pendingImport.unavailable.length;
 
     document.getElementById('import-compare-overlay').classList.remove('hidden');
+  }
+
+  function confirmDestructiveImport() {
+    if (!pendingImport) return;
+    dangerConfirm('Vas a sustituir tus etiquetas actuales por las del archivo importado. Lo que tengas ahora que no esté en el archivo se perderá.', () => {
+      resolveImportCompare('keepFile');
+    });
   }
 
   function resolveImportCompare(choice) {
