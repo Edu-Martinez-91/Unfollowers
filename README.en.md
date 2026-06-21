@@ -12,7 +12,7 @@
 [![Single file](https://img.shields.io/badge/Single--file-HTML-orange)]()
 [![Privacy: local by default](https://img.shields.io/badge/Privacy-local%20by%20default-success)]()
 
-### 🚀 [Use the app now → dynamic-paprenjak-816b02.netlify.app](https://dynamic-paprenjak-816b02.netlify.app)
+### [Use the app now](https://dynamic-paprenjak-816b02.netlify.app)
 
 *Open `index.html` in any browser, or just use the link above — no install required. You can create an account there if you want your tags synced across devices (optional).*
 
