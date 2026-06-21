@@ -6,6 +6,7 @@
 <title>IG Unfollowers</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20100%2060%27%3E%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%25%27%20y1%3D%270%25%27%20x2%3D%27100%25%27%20y2%3D%27100%25%27%3E%3Cstop%20offset%3D%270%25%27%20stop-color%3D%27%23f09433%27/%3E%3Cstop%20offset%3D%2750%25%27%20stop-color%3D%27%23dc2743%27/%3E%3Cstop%20offset%3D%27100%25%27%20stop-color%3D%27%23bc1888%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle%20cx%3D%2720%27%20cy%3D%2728%27%20r%3D%2713%27%20fill%3D%27url%28%23g%29%27/%3E%3Crect%20x%3D%2744%27%20y%3D%278%27%20width%3D%2712%27%20height%3D%2744%27%20rx%3D%274%27%20fill%3D%27%239a9a9a%27/%3E%3Ccircle%20cx%3D%2780%27%20cy%3D%2728%27%20r%3D%2713%27%20fill%3D%27%239a9a9a%27%20opacity%3D%270.3%27/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -381,7 +382,45 @@
     </div>
   </div>
 
-  <div style="text-align:center;margin-top:40px;margin-bottom:8px;font-size:10px;color:var(--text4);">
+  <div class="instrucciones" id="cloud-sync-box" style="margin-top:40px;">
+    <h3>☁ Sincronizar entre dispositivos</h3>
+    <div id="cloud-logged-out">
+      <p style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
+        Inicia sesión para que tus etiquetas (VIP, unfollowed, no disponible) se guarden en la nube
+        y aparezcan igual en cualquier navegador donde abras esta app.
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <input class="search-box" style="margin-bottom:0;flex:1;min-width:140px;" type="email" placeholder="email" id="cloud-email">
+        <input class="search-box" style="margin-bottom:0;flex:1;min-width:140px;" type="password" placeholder="contraseña" id="cloud-pass">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="cloudLogin()" style="
+          background:rgba(29,155,240,0.15); border:1px solid rgba(29,155,240,0.4); border-radius:8px;
+          padding:8px 14px; color:#1d9bf0; font-family:'Space Mono',monospace;
+          font-size:11px; cursor:pointer; font-weight:700;
+        ">Iniciar sesión</button>
+        <button onclick="cloudSignup()" style="
+          background:none; border:1px solid var(--input-border); border-radius:8px;
+          padding:8px 14px; color:var(--text2); font-family:'Space Mono',monospace;
+          font-size:11px; cursor:pointer;
+        ">Crear cuenta</button>
+      </div>
+      <p id="cloud-status" style="font-size:10px;color:var(--text4);margin-top:8px;"></p>
+    </div>
+    <div id="cloud-logged-in" style="display:none;">
+      <p style="font-size:11px;color:var(--text3);">
+        Sesión iniciada como <strong id="cloud-email-label" style="color:var(--text2);"></strong> ·
+        <span id="cloud-sync-state" style="color:#38d96a;">sincronizado ✓</span>
+      </p>
+      <button onclick="cloudLogout()" style="
+        margin-top:8px; background:none; border:1px solid rgba(200,50,50,0.35); border-radius:8px;
+        padding:7px 14px; color:#c0392b; font-family:'Space Mono',monospace;
+        font-size:10px; cursor:pointer;
+      ">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:24px;margin-bottom:8px;font-size:10px;color:var(--text4);">
     VIPs y unfollowed se guardan en tu navegador automáticamente.
   </div>
   <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;">
@@ -457,6 +496,120 @@
   let manualVerified   = loadSet('ig_vip');
   let manualUnfollowed = loadSet('ig_unfollowed');
   let manualUnavailable = loadSet('ig_unavailable');
+
+  // ── Sincronización en la nube (Supabase, opcional) ──────────
+  var SUPABASE_URL = 'TU_SUPABASE_URL_AQUI';
+  var SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY_AQUI';
+  var sb = null;
+  var cloudUser = null;
+  var pushTimer = null;
+
+  function sbConfigured() {
+    return SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== 'undefined'
+      && SUPABASE_URL.indexOf('TU_SUPABASE_URL_AQUI') === -1
+      && SUPABASE_ANON_KEY.indexOf('TU_SUPABASE_ANON_KEY_AQUI') === -1;
+  }
+
+  function initCloudSync() {
+    if (!sbConfigured()) {
+      document.getElementById('cloud-sync-box').style.display = 'none';
+      return;
+    }
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    sb.auth.getSession().then(function(res) {
+      var session = res && res.data && res.data.session;
+      if (session) onCloudLogin(session.user);
+    });
+    sb.auth.onAuthStateChange(function(event, session) {
+      if (session && session.user) onCloudLogin(session.user);
+      else onCloudLogout();
+    });
+  }
+
+  function cloudLogin() {
+    var email = document.getElementById('cloud-email').value.trim();
+    var pass = document.getElementById('cloud-pass').value;
+    if (!email || !pass) return;
+    setCloudStatus('Iniciando sesión...');
+    sb.auth.signInWithPassword({ email: email, password: pass }).then(function(res) {
+      if (res.error) { setCloudStatus(res.error.message); return; }
+      setCloudStatus('');
+    });
+  }
+
+  function cloudSignup() {
+    var email = document.getElementById('cloud-email').value.trim();
+    var pass = document.getElementById('cloud-pass').value;
+    if (!email || !pass) return;
+    setCloudStatus('Creando cuenta...');
+    sb.auth.signUp({ email: email, password: pass }).then(function(res) {
+      if (res.error) { setCloudStatus(res.error.message); return; }
+      setCloudStatus('Cuenta creada. Si tu proyecto requiere confirmación, revisa tu email.');
+    });
+  }
+
+  function cloudLogout() {
+    if (sb) sb.auth.signOut();
+  }
+
+  function setCloudStatus(msg) {
+    var el = document.getElementById('cloud-status');
+    if (el) el.textContent = msg;
+  }
+
+  function onCloudLogin(user) {
+    cloudUser = user;
+    document.getElementById('cloud-logged-out').style.display = 'none';
+    document.getElementById('cloud-logged-in').style.display = 'block';
+    document.getElementById('cloud-email-label').textContent = user.email;
+    pullCloudTags();
+  }
+
+  function onCloudLogout() {
+    cloudUser = null;
+    document.getElementById('cloud-logged-out').style.display = 'block';
+    document.getElementById('cloud-logged-in').style.display = 'none';
+  }
+
+  function pullCloudTags() {
+    if (!sb || !cloudUser) return;
+    sb.from('unfollowers_tags').select('data').eq('user_id', cloudUser.id).maybeSingle().then(function(res) {
+      if (res.error) { setCloudSyncState('error al sincronizar'); return; }
+      var remote = (res.data && res.data.data) || { vip: [], unfollowed: [], unavailable: [] };
+      (remote.vip || []).forEach(function(u) { manualVerified.add(u); });
+      (remote.unfollowed || []).forEach(function(u) { manualUnfollowed.add(u); });
+      (remote.unavailable || []).forEach(function(u) { manualUnavailable.add(u); });
+      saveSet('ig_vip', manualVerified);
+      saveSet('ig_unfollowed', manualUnfollowed);
+      saveSet('ig_unavailable', manualUnavailable);
+      if (followingLoaded && followersLoaded) renderLists();
+      pushCloudTags();
+    });
+  }
+
+  function pushCloudTags() {
+    if (!sb || !cloudUser) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(function() {
+      setCloudSyncState('sincronizando...');
+      var payload = {
+        user_id: cloudUser.id,
+        data: {
+          vip: [...manualVerified],
+          unfollowed: [...manualUnfollowed],
+          unavailable: [...manualUnavailable],
+        },
+      };
+      sb.from('unfollowers_tags').upsert(payload).then(function(res) {
+        setCloudSyncState(res.error ? 'error al sincronizar' : 'sincronizado ✓');
+      });
+    }, 500);
+  }
+
+  function setCloudSyncState(msg) {
+    var el = document.getElementById('cloud-sync-state');
+    if (el) el.textContent = msg;
+  }
 
   // ── Extractor ──────────────────────────────────────────────
   function extractUsers(json) {
@@ -685,6 +838,7 @@
       showToast(`@${username} marcado como no disponible 👻`);
     }
     saveSet('ig_unavailable', manualUnavailable);
+    pushCloudTags();
     renderLists();
   }
 
@@ -697,6 +851,7 @@
       showToast(`@${username} marcado como unfollowed ✂︎`);
     }
     saveSet('ig_unfollowed', manualUnfollowed);
+    pushCloudTags();
     renderLists();
   }
 
@@ -710,6 +865,7 @@
       showToast(`@${username} marcado como VIP ✓`);
     }
     saveSet('ig_vip', manualVerified);
+    pushCloudTags();
     renderLists();
   }
 
@@ -777,6 +933,7 @@
       saveSet('ig_vip', manualVerified);
       saveSet('ig_unfollowed', manualUnfollowed);
       saveSet('ig_unavailable', manualUnavailable);
+      pushCloudTags();
       if (followingLoaded && followersLoaded) renderLists();
       showToast('Copia de seguridad importada ⬆');
     } catch (e) { alert(e); }
@@ -792,6 +949,8 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
   }
+
+  initCloudSync();
 </script>
 </body>
 </html>

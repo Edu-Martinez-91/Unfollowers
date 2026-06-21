@@ -4,6 +4,8 @@
 following.json
 followers*.json
 *.private.json
+bk_json/
+ig-unfollowers-backup-*.json
 
 # ═══════════════════════════════════════════════════
 # Sistema y editores
@@ -28,3 +30,8 @@ Thumbs.db
 *.bak
 *.backup
 index.html.bak
+
+# ═══════════════════════════════════════════════════
+# Notas internas — nunca públicas
+# ═══════════════════════════════════════════════════
+CONTEXTO_SESION.md
