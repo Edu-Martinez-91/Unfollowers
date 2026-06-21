@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/logo.svg" alt="Unfollowers" width="120" height="120">
+
 # Unfollowers — IG Unfollowers
 
 **Descubre quién no te sigue de vuelta en Instagram — un solo archivo HTML, sin frameworks, sin build, sin npm, sin servidor.**

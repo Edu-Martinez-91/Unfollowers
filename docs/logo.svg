@@ -1,0 +1,16 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="240" height="240">
+  <defs>
+    <linearGradient id="igGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f09433"/>
+      <stop offset="25%" stop-color="#e6683c"/>
+      <stop offset="50%" stop-color="#dc2743"/>
+      <stop offset="75%" stop-color="#cc2366"/>
+      <stop offset="100%" stop-color="#bc1888"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="34" fill="none" stroke="#888" stroke-opacity="0.3"
+          stroke-width="9" stroke-linecap="round" stroke-dasharray="3 7"/>
+  <circle cx="50" cy="50" r="34" fill="none" stroke="url(#igGrad)"
+          stroke-width="9" stroke-linecap="round" stroke-dasharray="160 1000"
+          transform="rotate(-90 50 50)"/>
+</svg>
