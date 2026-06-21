@@ -120,6 +120,7 @@
   .section-list { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
   .section-list.hidden { display: none; }
   #backup-info.hidden { display: none; }
+  #import-compare-overlay { display: flex; }
   #import-compare-overlay.hidden { display: none; }
 
   /* Cards */
@@ -282,8 +283,16 @@
 
   <div class="instrucciones" id="instrucciones">
     <h3>📦 Cómo obtener tus datos</h3>
+    <a href="https://accountscenter.instagram.com/info_and_permissions/dyi/?entry_point=notification"
+       target="_blank" rel="noreferrer" style="
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      background:linear-gradient(135deg, #f09433, #dc2743, #bc1888);
+      color:#fff; text-decoration:none; border-radius:10px;
+      padding:11px 16px; font-family:'Syne',sans-serif; font-weight:700;
+      font-size:13px; margin-bottom:16px;
+    ">📲 Solicitar mis datos en Instagram →</a>
     <ol>
-      <li>Instagram → <strong>Ajustes → Tu actividad → Descargar tu información</strong></li>
+      <li>Pulsa el botón de arriba (te lleva directo al Centro de cuentas de Meta) o ve a Instagram → <strong>Ajustes → Tu actividad → Descargar tu información</strong></li>
       <li>Formato <strong>JSON</strong> → solicitar descarga</li>
       <li>Te llega un email con un ZIP → descomprímelo</li>
       <li>Entra en <strong>connections/followers_and_following/</strong></li>
@@ -481,7 +490,7 @@
 
 <div id="import-compare-overlay" class="hidden" style="
   position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000;
-  display:flex; align-items:center; justify-content:center; padding:20px;
+  align-items:center; justify-content:center; padding:20px;
 ">
   <div style="
     background:var(--bg); border:1px solid var(--border); border-radius:16px;
