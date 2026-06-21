@@ -7,12 +7,14 @@
 **Descubre quién no te sigue de vuelta en Instagram — un solo archivo HTML, sin frameworks, sin build, sin npm, sin servidor.**
 
 [![Made with vanilla JS](https://img.shields.io/badge/Vanilla-JS-f7df1e?logo=javascript&logoColor=black)](https://developer.mozilla.org/docs/Web/JavaScript)
-[![Deploy: Netlify](https://img.shields.io/badge/Deploy-Netlify-00c7b7?logo=netlify&logoColor=white)](https://www.netlify.com)
+[![Deploy: Netlify](https://img.shields.io/badge/Deploy-Netlify-00c7b7?logo=netlify&logoColor=white)](https://dynamic-paprenjak-816b02.netlify.app)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](#licencia)
 [![Single file](https://img.shields.io/badge/Single--file-HTML-orange)]()
 [![Privacy: local by default](https://img.shields.io/badge/Privacy-local%20by%20default-success)]()
 
-*Abre `index.html` en cualquier navegador — no requiere instalación ni cuenta. La sincronización en la nube es opcional.*
+### 🚀 [Usar la app ahora → dynamic-paprenjak-816b02.netlify.app](https://dynamic-paprenjak-816b02.netlify.app)
+
+*Abre `index.html` en cualquier navegador, o usa directamente el enlace de arriba — no requiere instalación. Puedes crear una cuenta ahí mismo si quieres que tus etiquetas se sincronicen entre dispositivos (opcional).*
 
 🇪🇸 **Español** · [🇬🇧 English](README.en.md)
 

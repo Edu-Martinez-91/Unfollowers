@@ -7,12 +7,14 @@
 **Find out who doesn't follow you back on Instagram — a single HTML file, no frameworks, no build, no npm, no server.**
 
 [![Made with vanilla JS](https://img.shields.io/badge/Vanilla-JS-f7df1e?logo=javascript&logoColor=black)](https://developer.mozilla.org/docs/Web/JavaScript)
-[![Deploy: Netlify](https://img.shields.io/badge/Deploy-Netlify-00c7b7?logo=netlify&logoColor=white)](https://www.netlify.com)
+[![Deploy: Netlify](https://img.shields.io/badge/Deploy-Netlify-00c7b7?logo=netlify&logoColor=white)](https://dynamic-paprenjak-816b02.netlify.app)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](#license)
 [![Single file](https://img.shields.io/badge/Single--file-HTML-orange)]()
 [![Privacy: local by default](https://img.shields.io/badge/Privacy-local%20by%20default-success)]()
 
-*Open `index.html` in any browser — no install or account required. Cloud sync is optional.*
+### 🚀 [Use the app now → dynamic-paprenjak-816b02.netlify.app](https://dynamic-paprenjak-816b02.netlify.app)
+
+*Open `index.html` in any browser, or just use the link above — no install required. You can create an account there if you want your tags synced across devices (optional).*
 
 🇬🇧 **English** · [🇪🇸 Español](README.md)
 
