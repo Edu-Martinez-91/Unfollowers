@@ -10,9 +10,9 @@
 [![Deploy: Netlify](https://img.shields.io/badge/Deploy-Netlify-00c7b7?logo=netlify&logoColor=white)](https://www.netlify.com)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](#licencia)
 [![Single file](https://img.shields.io/badge/Single--file-HTML-orange)]()
-[![Privacy: 100% local](https://img.shields.io/badge/Privacy-100%25%20local-success)]()
+[![Privacy: local by default](https://img.shields.io/badge/Privacy-local%20by%20default-success)]()
 
-*Abre `index.html` en cualquier navegador — no requiere instalación, no requiere cuenta, no envía ningún dato a ningún servidor.*
+*Abre `index.html` en cualquier navegador — no requiere instalación ni cuenta. La sincronización en la nube es opcional.*
 
 🇪🇸 **Español** · [🇬🇧 English](README.en.md)
 
@@ -24,7 +24,7 @@
 
 **Unfollowers** compara los dos archivos JSON que Instagram te entrega cuando exportas tu actividad (`following.json` y `followers_*.json`) y calcula, en tu propio navegador, quién sigues tú que no te sigue de vuelta. Nada de pedir tu usuario o contraseña, nada de OAuth, nada de scraping con bots que pueda bloquear tu cuenta: solo lees los archivos que Instagram ya te da oficialmente.
 
-Toda la aplicación cabe en un único `index.html`. No hay backend, no hay build, no hay dependencias de npm. El procesamiento es 100% client-side y el estado (cuentas marcadas como VIP, como "ya hice unfollow" o como "no disponible") se guarda en `localStorage` de tu navegador.
+Toda la aplicación cabe en un único `index.html`. No hay build, no hay dependencias de npm. El procesamiento es 100% client-side y el estado (cuentas marcadas como VIP, como "ya hice unfollow" o como "no disponible") se guarda en `localStorage` de tu navegador. Si quieres que ese estado viaje contigo entre dispositivos, puedes iniciar sesión opcionalmente y sincronizarlo contra una base de datos en Supabase — sin login, la app sigue funcionando 100% local, igual que siempre.
 
 ---
 
@@ -62,6 +62,8 @@ Existen decenas de apps y "servicios" de terceros que prometen decirte quién te
 - **Acceso directo al perfil** de cada cuenta desde la propia tarjeta (abre Instagram en una pestaña nueva).
 - **Modo claro/oscuro automático** según las preferencias del sistema (`prefers-color-scheme`).
 - **Botones de purga** para borrar VIPs, unfollowed o no disponibles guardados, por si quieres empezar de cero.
+- **Export/import de copia de seguridad** de tus etiquetas en `.json`, para moverlas manualmente de un navegador a otro sin necesidad de cuenta.
+- **Sincronización en la nube (opcional).** Inicia sesión con email/contraseña y tus etiquetas VIP/unfollowed/no-disponible se guardan en Supabase y se fusionan automáticamente con las de cualquier otro dispositivo donde abras la app — sin perder nada, sin tener que volver a categorizar.
 - **Toast de confirmación** en cada acción, sin diálogos intrusivos.
 
 ---
@@ -71,16 +73,19 @@ Existen decenas de apps y "servicios" de terceros que prometen decirte quién te
 | Capa | Tecnología |
 |------|------------|
 | **Frontend** | Un solo archivo HTML con `<style>` y `<script>` inline. Vanilla JS, sin frameworks ni librerías externas. |
-| **Persistencia** | `localStorage` del navegador — sin base de datos, sin backend, sin cuentas de usuario. |
+| **Persistencia local** | `localStorage` del navegador — funciona sin cuenta ni conexión. |
+| **Sincronización (opcional)** | [Supabase](https://supabase.com) — Auth (email/contraseña) + Postgres con Row Level Security. Una sola tabla, `unfollowers_tags`, con tus etiquetas en una columna `jsonb`. |
 | **Hosting** | [Netlify](https://www.netlify.com), `index.html` en la raíz. Despliegue continuo desde `main`. |
 | **Tipografía** | Space Mono (UI) + Syne (titulares), vía Google Fonts. |
-| **Privacidad** | Cero llamadas de red salvo la carga de fuentes. Los JSON de Instagram se procesan enteramente en el navegador y nunca salen del dispositivo. |
+| **Privacidad** | Sin iniciar sesión, cero llamadas de red salvo la carga de fuentes: los JSON de Instagram se procesan enteramente en el navegador y nunca salen del dispositivo. Si activas la sincronización, solo tus etiquetas (no los JSON de Instagram) viajan a tu base de datos en Supabase. |
 
 ---
 
 ## Privacidad
 
-Esta herramienta no tiene backend. No hay servidor que reciba tus archivos `following.json` o `followers_*.json`: el `FileReader` de la API del navegador los lee directamente en memoria, y el único almacenamiento persistente es el `localStorage` de tu propio navegador, que nunca abandona tu dispositivo. Puedes verificarlo abriendo las herramientas de desarrollador → pestaña Red mientras usas la app: no encontrarás ninguna petición saliente con tus datos.
+Tus archivos `following.json` y `followers_*.json` **nunca salen del navegador**: el `FileReader` de la API los lee directamente en memoria, y por defecto el único almacenamiento persistente es el `localStorage` de tu propio dispositivo. Puedes verificarlo abriendo las herramientas de desarrollador → pestaña Red mientras usas la app: no encontrarás ninguna petición saliente con esos datos, con o sin sesión iniciada.
+
+La única información que sale de tu dispositivo, y solo si decides iniciar sesión, son los nombres de usuario que tú mismo has marcado como VIP, unfollowed o no disponible — se guardan en una base de datos Supabase protegida por Row Level Security, de forma que cada cuenta de usuario solo puede leer y escribir sus propias etiquetas.
 
 ---
 

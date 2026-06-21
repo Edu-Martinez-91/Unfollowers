@@ -10,9 +10,9 @@
 [![Deploy: Netlify](https://img.shields.io/badge/Deploy-Netlify-00c7b7?logo=netlify&logoColor=white)](https://www.netlify.com)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](#license)
 [![Single file](https://img.shields.io/badge/Single--file-HTML-orange)]()
-[![Privacy: 100% local](https://img.shields.io/badge/Privacy-100%25%20local-success)]()
+[![Privacy: local by default](https://img.shields.io/badge/Privacy-local%20by%20default-success)]()
 
-*Open `index.html` in any browser — no install, no account, no data ever leaves your device.*
+*Open `index.html` in any browser — no install or account required. Cloud sync is optional.*
 
 🇬🇧 **English** · [🇪🇸 Español](README.md)
 
@@ -24,7 +24,7 @@
 
 **Unfollowers** compares the two JSON files Instagram gives you when you export your activity (`following.json` and `followers_*.json`) and computes, entirely inside your own browser, who you follow that doesn't follow you back. No username or password required, no OAuth, no bot scraping that could get your account flagged — just the files Instagram already hands you officially.
 
-The whole app fits in a single `index.html`. No backend, no build step, no npm dependencies. Processing is 100% client-side, and your state (accounts marked as VIP, "already unfollowed", or "unavailable") is saved in your browser's `localStorage`.
+The whole app fits in a single `index.html`. No build step, no npm dependencies. Processing is 100% client-side, and your state (accounts marked as VIP, "already unfollowed", or "unavailable") is saved in your browser's `localStorage`. If you want that state to follow you across devices, you can optionally log in and sync it against a Supabase database — without logging in, the app keeps working 100% locally, exactly as before.
 
 ---
 
@@ -62,6 +62,8 @@ There are dozens of third-party apps and "services" that promise to tell you who
 - **Direct link to each profile** straight from the card (opens Instagram in a new tab).
 - **Automatic light/dark mode** based on system preference (`prefers-color-scheme`).
 - **Purge buttons** to clear saved VIPs, unfollowed, or unavailable tags if you want a clean slate.
+- **Backup export/import** of your tags as `.json`, to move them manually between browsers without needing an account.
+- **Cloud sync (optional).** Log in with email/password and your VIP/unfollowed/unavailable tags are saved to Supabase and automatically merged with any other device where you open the app — nothing lost, no re-tagging from scratch.
 - **Confirmation toast** on every action, no intrusive dialogs.
 
 ---
@@ -71,16 +73,19 @@ There are dozens of third-party apps and "services" that promise to tell you who
 | Layer | Technology |
 |------|------------|
 | **Frontend** | A single HTML file with inline `<style>` and `<script>`. Vanilla JS, no frameworks or external libraries. |
-| **Persistence** | Browser `localStorage` — no database, no backend, no user accounts. |
+| **Local persistence** | Browser `localStorage` — works without an account or a connection. |
+| **Sync (optional)** | [Supabase](https://supabase.com) — Auth (email/password) + Postgres with Row Level Security. A single table, `unfollowers_tags`, holding your tags in a `jsonb` column. |
 | **Hosting** | [Netlify](https://www.netlify.com), `index.html` at the root. Continuous deployment from `main`. |
 | **Typography** | Space Mono (UI) + Syne (headings), via Google Fonts. |
-| **Privacy** | Zero network calls except loading fonts. Instagram's JSON files are processed entirely in the browser and never leave the device. |
+| **Privacy** | Without logging in, zero network calls except loading fonts: Instagram's JSON files are processed entirely in the browser and never leave the device. If you enable sync, only your tags (not Instagram's JSON files) travel to your Supabase database. |
 
 ---
 
 ## Privacy
 
-This tool has no backend. No server ever receives your `following.json` or `followers_*.json` files: the browser's `FileReader` API reads them directly in memory, and the only persistent storage is your own browser's `localStorage`, which never leaves your device. You can verify this by opening dev tools → the Network tab while using the app: you won't find a single outgoing request carrying your data.
+Your `following.json` and `followers_*.json` files **never leave the browser**: the `FileReader` API reads them directly in memory, and by default the only persistent storage is your own device's `localStorage`. You can verify this by opening dev tools → the Network tab while using the app: you won't find a single outgoing request carrying that data, logged in or not.
+
+The only information that ever leaves your device, and only if you choose to log in, are the usernames you've manually tagged as VIP, unfollowed, or unavailable — stored in a Supabase database protected by Row Level Security, so each account can only read and write its own tags.
 
 ---
 
